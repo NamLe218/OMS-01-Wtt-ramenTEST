@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01-Wantantan Ramen — Table Ordering</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="indexStyle.css">
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════ TOAST NOTIFICATION ═══════════════════════════ -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMsg">Added to order!</span>
+    </div>
+
+    <!-- ═══════════════════════════ SHEET BACKDROP ═══════════════════════════════ -->
+    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+
+    <!-- ═══════════════════════ CUSTOMIZATION BOTTOM SHEET ════════════════════════ -->
+    <div class="sheet" id="sheet">
+        <div class="sheet-handle" onclick="closeSheet()"></div>
+        <div class="sheet-head">
+            <div>
+                <div class="sheet-title" id="sheetTitle">Customize Ramen</div>
+                <div class="sheet-sub" id="sheetSub">Select one in each category.</div>
+                <div class="sheet-price" id="sheetPriceLine"></div>
+            </div>
+            <button class="sheet-close" onclick="closeSheet()">✕</button>
+        </div>
+
+        <!-- Ramen options -->
+        <div id="sheetRamen" style="display:none;">
+            <div class="option-group">
+                <div class="option-label">Noodle Type</div>
+                <div class="option-buttons" data-key="noodleType">
+                    <button class="opt-btn active" data-value="Thin straight" onclick="chooseSingle(this)">Thin
+                        straight</button>
+                    <button class="opt-btn" data-value="Medium wavy" onclick="chooseSingle(this)">Medium wavy</button>
+                    <button class="opt-btn" data-value="Thick chewy" onclick="chooseSingle(this)">Thick chewy</button>
+                </div>
+            </div>
+            <div class="option-group">
+                <div class="option-label">Noodle Firmness</div>
+                <div class="option-buttons" data-key="firmness">
+                    <button class="opt-btn" data-value="Soft" onclick="chooseSingle(this)">Soft</button>
+                    <button class="opt-btn active" data-value="Normal" onclick="chooseSingle(this)">Normal</button>
+                    <button class="opt-btn" data-value="Firm" onclick="chooseSingle(this)">Firm</button>
+                    <button class="opt-btn" data-value="Extra firm" onclick="chooseSingle(this)">Extra firm</button>
+                </div>
+            </div>
+            <div class="option-group">
+                <div class="option-label">Broth Saltiness</div>
+                <div class="option-buttons" data-key="saltiness">
+                    <button class="opt-btn" data-value="Light" onclick="chooseSingle(this)">Light</button>
+                    <button class="opt-btn active" data-value="Regular" onclick="chooseSingle(this)">Regular</button>
+                    <button class="opt-btn" data-value="Rich" onclick="chooseSingle(this)">Rich</button>
+                </div>
+            </div>
+            <div class="option-group">
+                <div class="option-label">
+                    Extra Toppings
+                    <span
+                        style="font-size:10px; font-weight:400; color:#8a7060; text-transform:none; letter-spacing:0;">
+                        (optional, +15.000đ each)
+                    </span>
+                </div>
+                <div class="option-buttons" data-key="toppings">
+                    <button class="opt-btn toggle" data-value="Extra chashu" onclick="toggleTopping(this, true)">+ Extra
+                        chashu</button>
+                    <button class="opt-btn toggle" data-value="Soft-boiled egg" onclick="toggleTopping(this, true)">+
+                        Soft-boiled egg</button>
+                    <button class="opt-btn toggle" data-value="Corn" onclick="toggleTopping(this, true)">+ Corn</button>
+                    <button class="opt-btn toggle" data-value="Nori" onclick="toggleTopping(this, true)">+ Nori</button>
+                    <button class="opt-btn toggle" data-value="Garlic oil" onclick="toggleTopping(this, true)">+ Garlic
+                        oil</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simple quantity selector for non-ramen items -->
+        <div id="sheetSimple" style="display:none;">
+            <div class="sheet-qty-row">
+                <div class="qty-ctrl">
+                    <button class="qty-btn" onclick="changeSheetQty(-1)">−</button>
+                    <span class="qty-num" id="sheetQty">1</span>
+                    <button class="qty-btn" onclick="changeSheetQty(1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sheet-actions">
+            <div class="custom-row" style="justify-content:space-between;">
+                <div class="qty-ctrl" id="sheetQtyRamen">
+                    <button class="qty-btn" onclick="changeSheetQtyRamen(-1)">−</button>
+                    <span class="qty-num" id="sheetRamenQtyNum">1</span>
+                    <button class="qty-btn" onclick="changeSheetQtyRamen(1)">+</button>
+                </div>
+                <button class="add-to-cart" id="sheetPrimaryBtn" onclick="confirmSheet()">Add to Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ NAV ═══════════════════════════════════ -->
+    <nav>
+        <div class="brand">
+            <div class="brand-icon">🍜</div>
+            <div>
+                <div>01-Wantantan</div>
+                <span class="brand-sub">RAMEN</span>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active" onclick="showPage('home', this)">Home</a>
+            <a href="#" onclick="showPage('menu', this)">Menu</a>
+            <a href="#" onclick="showPage('order', this)">Order</a>
+            <a href="#" onclick="showPage('kitchen', this)">Kitchen</a>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
+    <div class="page active" id="page-home">
+
+        <div class="hero">
+            <div class="hero-inner">
+                <div class="hero-kicker">WELCOME · 01-WANTANTAN RAMEN</div>
+                <h1>
+                    <span>本格ラーメン</span>
+                    Authentic Ramen,<br>Every Bowl
+                </h1>
+                <div class="hero-row">
+                    <div class="qr-note">
+                        <div class="qr-box"><img src="./Images/qr-code.png"></div>
+                        <span>Scan the QR code at your table to start ordering.</span>
+                    </div>
+                    <button class="hero-btn"
+                        onclick="showPage('menu', document.querySelector('.nav-links a:nth-child(2)'))">
+                        View Menu →
+                    </button>
+                </div>
+                <p class="hero-sub">
+                    Browse the menu, customise your ramen exactly how you like it, and send your order
+                    straight to the kitchen — no app needed.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="divider-kanji">一</div>
+            <h2 class="section-title">Popular Dishes</h2>
+            <p class="section-sub">Tap any ramen bowl to customise noodle type, firmness, saltiness, and toppings.</p>
+            <div class="menu-grid">
+
+                <div class="menu-card" onclick="openRamenFromHome('Original Tonkotsu')">
+                    <img src="https://images.unsplash.com/photo-1638866281450-3933540af86a?q=80&w=800&auto=format&fit=crop"
+                        alt="Original Tonkotsu">
+                    <div class="menu-card-body">
+                        <div class="menu-card-top">
+                            <div>
+                                <div class="menu-card-name">Original Tonkotsu</div>
+                                <div class="menu-card-cat">Main · Ramen</div>
+                            </div>
+                            <div class="menu-card-price">129.000đ<span> / bowl</span></div>
+                        </div>
+                        <div class="menu-card-desc">Rich pork broth with chashu, soft-boiled egg, and scallions.</div>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="openRamenFromHome('Shoyu Ramen')">
+                    <img src="https://images.unsplash.com/photo-1707322467700-945f9bef9c58?q=80&w=800&auto=format&fit=crop"
+                        alt="Shoyu Ramen">
+                    <div class="menu-card-body">
+                        <div class="menu-card-top">
+                            <div>
+                                <div class="menu-card-name">Shoyu Ramen</div>
+                                <div class="menu-card-cat">Main · Ramen</div>
+                            </div>
+                            <div class="menu-card-price">139.000đ<span> / bowl</span></div>
+                        </div>
+                        <div class="menu-card-desc">Soy-based broth with tender chashu and nori.</div>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="openRamenFromHome('Spicy Miso Ramen')">
+                    <img src="https://images.unsplash.com/photo-1772217261042-0175d0b2fcb0?q=80&w=800&auto=format&fit=crop"
+                        alt="Spicy Miso Ramen">
+                    <div class="menu-card-body">
+                        <div class="menu-card-top">
+                            <div>
+                                <div class="menu-card-name">Spicy Miso Ramen</div>
+                                <div class="menu-card-cat">Main · Ramen</div>
+                            </div>
+                            <div class="menu-card-price">139.000đ<span> / bowl</span></div>
+                        </div>
+                        <div class="menu-card-desc">Miso broth, chili oil, sweet corn, bamboo shoots.</div>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="addMenuItem('Gyoza (5 pcs)')">
+                    <img src="https://images.unsplash.com/photo-1738681336104-608b4e7dc3b0?q=80&w=800&auto=format&fit=crop"
+                        alt="Gyoza">
+                    <div class="menu-card-body">
+                        <div class="menu-card-top">
+                            <div>
+                                <div class="menu-card-name">Gyoza (5 pcs)</div>
+                                <div class="menu-card-cat">Side · Dumplings</div>
+                            </div>
+                            <div class="menu-card-price">69.000đ<span> / plate</span></div>
+                        </div>
+                        <div class="menu-card-desc">Pan-fried dumplings served with tare dipping sauce.</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer>
+            <div>
+                <h4>Restaurant</h4>
+                <a href="#">About Us</a>
+                <a href="#">Opening Hours</a>
+                <a href="#">Contact Staff</a>
+            </div>
+            <div>
+                <h4>Dining</h4>
+                <a href="#">Allergy Info</a>
+                <a href="#">Takeaway Orders</a>
+                <a href="#">Group Booking</a>
+            </div>
+            <div>
+                <h4>Location</h4>
+                <a href="#">Find Our Restaurant</a>
+                <a href="#">Parking &amp; Access</a>
+                <a href="#">Delivery Partners</a>
+            </div>
+        </footer>
+        <div class="footer-bottom">© 2026 01-WANTANTAN RAMEN — Table Ordering System</div>
+
+    </div><!-- /page-home -->
+
+    <!-- ═══════════════════════════════ MENU PAGE ═══════════════════════════════ -->
+    <div class="page" id="page-menu">
+
+        <div class="section" style="padding-bottom:0">
+            <div class="divider-kanji">二</div>
+            <h2 class="section-title">Our Menu</h2>
+            <p class="section-sub">
+                Tap a ramen bowl to customise noodle type, firmness, broth saltiness and toppings.<br>
+                Drinks and sides are added directly to your order.
+            </p>
+        </div>
+
+        <div class="menu-filters">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-category="all" onclick="setFilter(this)">All</button>
+                <button class="filter-tab" data-category="mains" onclick="setFilter(this)">Ramen</button>
+                <button class="filter-tab" data-category="sides" onclick="setFilter(this)">Sides</button>
+                <button class="filter-tab" data-category="drinks" onclick="setFilter(this)">Drinks</button>
+            </div>
+            <div class="filter-search">
+                <span>🔍</span>
+                <input type="text" placeholder="Search menu..." id="menuSearch" oninput="filterMenuBySearch()">
+            </div>
+        </div>
+
+        <div class="menu-grid" id="menuGrid">
+
+            <!-- RAMEN (mains) -->
+            <div class="menu-card" data-category="mains" data-name="Original Tonkotsu"
+                onclick="openRamen('Original Tonkotsu')">
+                <img src="https://images.unsplash.com/photo-1623341214825-9f4f963727da?q=80&w=800&auto=format&fit=crop"
+                    alt="Original Tonkotsu">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Original Tonkotsu</div>
+                            <div class="menu-card-cat">Main · Ramen</div>
+                        </div>
+                        <div class="menu-card-price">129.000đ<span> / bowl</span></div>
+                    </div>
+                    <div class="menu-card-desc">Classic pork bone broth, chashu, marinated egg, scallions.</div>
+                </div>
+            </div>
+
+            <div class="menu-card" data-category="mains" data-name="Spicy Miso Ramen"
+                onclick="openRamen('Spicy Miso Ramen')">
+                <img src="https://images.unsplash.com/photo-1772217261042-0175d0b2fcb0?q=80&w=800&auto=format&fit=crop"
+                    alt="Spicy Miso Ramen">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Spicy Miso Ramen</div>
+                            <div class="menu-card-cat">Main · Ramen</div>
+                        </div>
+                        <div class="menu-card-price">139.000đ<span> / bowl</span></div>
+                    </div>
+                    <div class="menu-card-desc">Miso broth, chili oil, sweet corn, bamboo shoots.</div>
+                </div>
+            </div>
+
+            <div class="menu-card" data-category="mains" data-name="Shoyu Ramen" onclick="openRamen('Shoyu Ramen')">
+                <img src="https://images.unsplash.com/photo-1707322467700-945f9bef9c58?q=80&w=800&auto=format&fit=crop"
+                    alt="Shoyu Ramen">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Shoyu Ramen</div>
+                            <div class="menu-card-cat">Main · Ramen</div>
+                        </div>
+                        <div class="menu-card-price">129.000đ<span> / bowl</span></div>
+                    </div>
+                    <div class="menu-card-desc">Soy broth, grilled chicken, nori, scallions.</div>
+                </div>
+            </div>
+
+            <!-- SIDES -->
+            <div class="menu-card" data-category="sides" data-name="Gyoza (5 pcs)"
+                onclick="addMenuItem('Gyoza (5 pcs)')">
+                <img src="https://images.unsplash.com/photo-1738681336104-608b4e7dc3b0?q=80&w=800&auto=format&fit=crop"
+                    alt="Gyoza">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Gyoza (5 pcs)</div>
+                            <div class="menu-card-cat">Side · Dumplings</div>
+                        </div>
+                        <div class="menu-card-price">69.000đ<span> / plate</span></div>
+                    </div>
+                    <div class="menu-card-desc">Pan-fried pork dumplings with tare sauce.</div>
+                </div>
+            </div>
+
+            <div class="menu-card" data-category="sides" data-name="Extra Chashu" onclick="addMenuItem('Extra Chashu')">
+                <img src="https://images.unsplash.com/photo-1768204037765-2c744f4330ca?q=80&w=800&auto=format&fit=crop"
+                    alt="Extra Chashu">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Extra Chashu</div>
+                            <div class="menu-card-cat">Extra Topping</div>
+                        </div>
+                        <div class="menu-card-price">35.000đ<span> / add-on</span></div>
+                    </div>
+                    <div class="menu-card-desc">Two extra slices of slow-braised pork belly.</div>
+                </div>
+            </div>
+
+            <!-- DRINKS -->
+            <div class="menu-card" data-category="drinks" data-name="Coca-Cola" onclick="addMenuItem('Coca-Cola')">
+                <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800&auto=format&fit=crop"
+                    alt="Coca-Cola">
+                <div class="menu-card-body">
+                    <div class="menu-card-top">
+                        <div>
+                            <div class="menu-card-name">Coca-Cola</div>
+                            <div class="menu-card-cat">Drink</div>
+                        </div>
+                        <div class="menu-card-price">45.000đ<span> / bottle</span></div>
+                    </div>
+                    <div class="menu-card-desc">Ice-cold Coca-Cola, served chilled.</div>
+                </div>
+            </div>
+
+
+
+        </div><!-- /menuGrid -->
+
+        <footer>
+            <div>
+                <h4>Restaurant</h4><a href="#">About Us</a><a href="#">Opening Hours</a>
+            </div>
+            <div>
+                <h4>Dining</h4><a href="#">Allergens</a><a href="#">Takeaway</a>
+            </div>
+            <div>
+                <h4>Help</h4><a href="#">Call Staff</a><a href="#">Feedback</a>
+            </div>
+        </footer>
+        <div class="footer-bottom">© 2026 01-WANTANTAN RAMEN — Table Ordering System</div>
+
+    </div><!-- /page-menu -->
+
+    <!-- ════════════════════════ ORDER REVIEW PAGE ══════════════════════════════ -->
+    <div class="page" id="page-order">
+
+        <div class="cart-layout">
+
+            <!-- Cart table -->
+            <div>
+                <h1 class="cart-title">Review Your Order</h1>
+                <table class="cart-table" id="cartTableWrapper">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Customisation</th>
+                            <th style="text-align:right;">Price</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="cart-empty">
+                                    <div class="cart-empty-icon">🍜</div>
+                                    <div>Your order is empty.</div>
+                                    <div style="margin-top:6px; font-size:11px; color:#999;">Go to the menu to add
+                                        items.</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="cart-total-row">
+                            <td colspan="2"></td>
+                            <td style="text-align:right; font-weight:700;">Total:</td>
+                            <td class="cart-total-price" id="cartTotal">0đ</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Payment card -->
+            <div class="pay-card">
+                <h2>Payment Method</h2>
+                <p class="pay-card-sub">
+                    Choose how you will pay. Your selection is shown to kitchen staff.
+                </p>
+
+                <div class="pay-method active" data-pay="paid" onclick="selectPay(this)">
+                    <span class="pay-icon">💳</span>
+                    <div>
+                        <div class="pay-label">Card / QR Payment</div>
+                        <div style="font-size:11px; color:#888;">Pay online at this step</div>
+                    </div>
+                    <span class="pay-status-badge paid">PAID</span>
+                </div>
+
+                <div class="pay-method" data-pay="unpaid" onclick="selectPay(this)">
+                    <span class="pay-icon">💵</span>
+                    <div>
+                        <div class="pay-label">Cash at Counter</div>
+                        <div style="font-size:11px; color:#888;">Pay when picking up or after dining</div>
+                    </div>
+                    <span class="pay-status-badge unpaid">UNPAID</span>
+                </div>
+
+                <button class="order-now" onclick="confirmOrder()">✓ Confirm &amp; Send to Kitchen</button>
+                <button class="back-btn"
+                    onclick="showPage('menu', document.querySelector('.nav-links a:nth-child(2)'))">← Back to
+                    Menu</button>
+                <div class="lock-note">
+                    ⚠ After confirming, your order is sent directly to the kitchen and cannot be changed.
+                    Please ask staff for any modifications.
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <div>
+                <h4>Questions</h4><a href="#">Call Staff</a><a href="#">Change Table</a>
+            </div>
+            <div>
+                <h4>Payment</h4><a href="#">Split Bill</a><a href="#">Receipts</a>
+            </div>
+            <div>
+                <h4>Policies</h4><a href="#">Privacy</a><a href="#">Terms</a>
+            </div>
+        </footer>
+        <div class="footer-bottom">© 2026 01-WANTANTAN RAMEN — Table Ordering System</div>
+
+    </div><!-- /page-order -->
+
+    <!-- ══════════════════════════ KITCHEN DISPLAY ══════════════════════════════ -->
+    <div class="page" id="page-kitchen">
+
+        <div class="kitchen-wrap">
+
+            <div class="kitchen-header">
+                <div>
+                    <div class="kitchen-title">🍳 Kitchen Display</div>
+                    <div style="font-size:12px; color:var(--mid); margin-top:3px;">
+                        01-Wantantan Ramen · Real-time order management
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <span class="kitchen-badge" id="kitchenClock">—</span>
+                    <span class="kitchen-badge">Oldest orders at top</span>
+                </div>
+            </div>
+
+            <div class="kitchen-legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--status-new)"></div>New Order
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--status-prep)"></div>In Preparation
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--status-done)"></div>Completed
+                </div>
+                <div class="legend-item" style="margin-left:auto;">
+                    <span class="badge-pay paid">PAID</span>&nbsp;= already paid &nbsp;
+                    <span class="badge-pay unpaid">UNPAID</span>&nbsp;= collect payment
+                </div>
+            </div>
+
+            <!-- DRINKS BOARD -->
+            <div class="board-group">
+                <div class="board-group-title">
+                    <span>🧃 Drinks</span>
+                    <span class="board-group-subtitle">Bar Station</span>
+                </div>
+                <div class="board-columns">
+                    <div>
+                        <div class="col-header new-hd">🔴 New Orders</div>
+                        <div class="column" id="drinks-new"></div>
+                    </div>
+                    <div>
+                        <div class="col-header prep-hd">🟡 In Preparation</div>
+                        <div class="column" id="drinks-prep"></div>
+                    </div>
+                    <div>
+                        <div class="col-header done-hd">🟢 Completed</div>
+                        <div class="column" id="drinks-done"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOD BOARD -->
+            <div class="board-group">
+                <div class="board-group-title">
+                    <span>🍜 Food</span>
+                    <span class="board-group-subtitle">Kitchen · Mains, Sides &amp; Desserts</span>
+                </div>
+                <div class="board-columns">
+                    <div>
+                        <div class="col-header new-hd">🔴 New Orders</div>
+                        <div class="column" id="food-new"></div>
+                    </div>
+                    <div>
+                        <div class="col-header prep-hd">🟡 In Preparation</div>
+                        <div class="column" id="food-prep"></div>
+                    </div>
+                    <div>
+                        <div class="col-header done-hd">🟢 Completed</div>
+                        <div class="column" id="food-done"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /kitchen-wrap -->
+
+        <footer>
+            <div>
+                <h4>Kitchen</h4><a href="#">Ticket View</a><a href="#">Printer Settings</a>
+            </div>
+            <div>
+                <h4>Bar</h4><a href="#">Drinks Only View</a>
+            </div>
+            <div>
+                <h4>Management</h4><a href="#">Export Log</a><a href="#">Shift Settings</a>
+            </div>
+        </footer>
+        <div class="footer-bottom">© 2026 01-WANTANTAN RAMEN — Staff Display</div>
+
+    </div><!-- /page-kitchen -->
+
+    <!-- ════════════════════════════════ SCRIPT ══════════════════════════════════ -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>
