@@ -295,20 +295,21 @@ function updateCartUI() {
             total += item.price;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-        <td style="cursor:pointer;" onclick="openEditFromCart(${i})">
+        <td data-label="Item" style="cursor:pointer;" onclick="openEditFromCart(${i})">
           <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-notes cart-notes-mobile">${item.notes}</div>
         </td>
-        <td>
+        <td data-label="Qty">
           <div class="cart-qty-ctrl">
             <button class="cart-qty-btn" onclick="changeCartQty(${i}, -1)">−</button>
             <span class="cart-qty-num">${item.qty}</span>
             <button class="cart-qty-btn" onclick="changeCartQty(${i}, 1)">+</button>
           </div>
         </td>
-        <td style="cursor:pointer;" onclick="openEditFromCart(${i})">
+        <td data-label="Customisation" class="cart-td-notes" style="cursor:pointer;" onclick="openEditFromCart(${i})">
           <div class="cart-item-notes">${item.notes}</div>
         </td>
-        <td class="cart-price">${formatVND(item.price)}</td>
+        <td data-label="Price" class="cart-price">${formatVND(item.price)}</td>
         <td><button class="cart-remove" onclick="removeCartItem(${i})">✕</button></td>`;
             body.appendChild(tr);
         });
@@ -336,6 +337,10 @@ function changeCartQty(index, delta) {
     updateCartUI();
 }
 
+function getTotalAmount() {
+    return cart.reduce((sum, item) => sum + item.price, 0);
+}
+
 function removeCartItem(index) {
     cart.splice(index, 1);
     updateCartUI();
@@ -346,6 +351,7 @@ function selectPay(el) {
     el.classList.add('active');
 }
 
+
 function confirmOrder() {
     if (!cart.length) {
         showToast('Add items before confirming!', true);
@@ -353,7 +359,22 @@ function confirmOrder() {
     }
 
     const payEl = document.querySelector('.pay-method.active');
-    const payStatus = (payEl && payEl.dataset.pay === 'paid') ? 'paid' : 'unpaid';
+    const isQR = payEl && payEl.dataset.pay === 'paid';
+
+    // 👉 CASE 1: QR PAYMENT (VNPAY)
+    if (isQR) {
+        const orderId = "ORDER_" + Date.now();
+        const amount = getTotalAmount();
+
+        payWithVNPay(orderId, amount);
+
+        return; // ⛔ dừng, chưa gửi bếp
+    }
+
+    // 👉 CASE 2: CASH → xử lý như cũ
+    processOrder('unpaid');
+}
+function processOrder(paymentStatus, orderId = null) {
     const now = Date.now();
 
     cart.forEach((item, idx) => {
@@ -364,16 +385,63 @@ function confirmOrder() {
             qty: item.qty,
             notes: item.notes,
             status: 'new',
-            paymentStatus: payStatus,
+            paymentStatus: paymentStatus,
             type: inferType(item.name),
             createdAt: now + idx,
+            orderId: orderId || null
         });
     });
 
     cart = [];
     updateCartUI();
     renderKitchen();
-    showToast('✓ Order sent to kitchen!');
+
+    if (paymentStatus === 'paid') {
+        showToast('✅ Payment success & order sent!');
+    } else {
+        showToast('Order sent (cash)');
+    }
+}
+
+let currentQrOrderId = null;
+
+async function payWithVNPay(orderId, amount) {
+    try {
+        currentQrOrderId = orderId;
+        const res = await fetch('http://localhost:3000/api/payment/create-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, amount })
+        });
+
+        const data = await res.json();
+
+        // Show VietQR in a popup
+        const qrUrl = `https://img.vietqr.io/image/vietinbank-113366668888-compact.jpg?amount=${amount}&addInfo=${orderId}`;
+        document.getElementById('qrImage').src = qrUrl;
+        document.getElementById('qrLink').href = data.paymentUrl;
+
+        document.getElementById('qrModalBackdrop').classList.add('show');
+        document.getElementById('qrModal').classList.add('show');
+
+    } catch (err) {
+        console.error(err);
+        showToast('Payment error!', true);
+    }
+}
+
+function closeQrModal() {
+    document.getElementById('qrModalBackdrop').classList.remove('show');
+    document.getElementById('qrModal').classList.remove('show');
+}
+
+function completeQrPayment() {
+    closeQrModal();
+    if (cart.length > 0) {
+        processOrder('paid', currentQrOrderId);
+        showToast('Order sent (QR)', false);
+        showPage('order', document.querySelector('.nav-links a:nth-child(3)'));
+    }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -469,4 +537,32 @@ window.addEventListener('load', () => {
             createdAt: now - 8 * 60000,
         },
     ];
+});
+window.addEventListener('load', () => {
+    const url = new URL(window.location.href);
+    const payment = url.searchParams.get("payment");
+    const orderId = url.searchParams.get("orderId");
+
+    let isPaymentReturn = false;
+
+    if (payment === "success") {
+        processOrder('paid', orderId);
+        isPaymentReturn = true;
+    }
+
+    if (payment === "fail") {
+        showToast('Payment failed!', true);
+        isPaymentReturn = true;
+    }
+
+    if (payment === "invalid") {
+        showToast('Payment verification failed!', true);
+        isPaymentReturn = true;
+    }
+
+    if (isPaymentReturn) {
+        showPage('order', document.querySelector('.nav-links a:nth-child(3)'));
+        // Xóa tham số trên URL để tránh chạy lại khi refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 });

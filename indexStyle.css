@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    01-Wantantan Ramen — Online Order Management System
    styles.css
    ═══════════════════════════════════════════════════════════════ */
@@ -123,6 +123,49 @@ nav {
 .nav-links a:hover {
     background: var(--crimson);
     color: white;
+}
+
+/* Hamburger hidden by default (desktop), shown via media query on mobile */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 8px 7px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.hamburger:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #e0d8cf;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ─── HERO ─── */
@@ -609,6 +652,11 @@ nav {
     max-width: 900px;
     margin: 0 auto;
     width: 100%;
+}
+
+/* Notes duplicate: hidden on desktop, shown on mobile inside Item cell */
+.cart-notes-mobile {
+    display: none;
 }
 
 .cart-title {
@@ -1325,14 +1373,159 @@ footer a:hover {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
     .board-columns {
         grid-template-columns: 1fr;
     }
 
-    .nav-links a {
-        padding: 5px 10px;
-        font-size: 11px;
+    /* Hide desktop nav links on mobile */
+    .nav-links {
+        display: none;
+    }
+
+    /* Show hamburger on mobile */
+    .hamburger {
+        display: flex;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+        letter-spacing: 1px;
+    }
+
+    .hero {
+        padding: 32px 16px 24px;
+    }
+
+    .menu-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px 28px;
+    }
+
+    .cart-layout {
+        padding: 16px 12px 32px;
+        gap: 14px;
+    }
+
+    .cart-title {
+        font-size: 19px;
+        margin-bottom: 12px;
+    }
+
+    .section {
+        padding: 28px 16px 36px;
+    }
+
+    /* ── Cart table: mobile card-style ── */
+
+    /* Hide the table header row on mobile */
+    .cart-table thead {
+        display: none;
+    }
+
+    /* Each row becomes a card */
+    .cart-table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        padding: 12px 12px;
+        border-bottom: 1px solid var(--border);
+        background: white;
+    }
+
+    .cart-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    /* Item name cell: full width */
+    .cart-table tbody td[data-label="Item"] {
+        display: block;
+        width: 100%;
+        padding: 0;
+    }
+
+    .cart-item-name {
+        font-size: 14px;
+        margin-bottom: 3px;
+    }
+
+    /* Show notes inside Item cell on mobile */
+    .cart-notes-mobile {
+        display: block;
+        font-size: 10px;
+        color: var(--mid);
+        line-height: 1.5;
+        margin-top: 2px;
+    }
+
+    /* Hide the separate Customisation column on mobile (notes shown in Item) */
+    .cart-table tbody td.cart-td-notes {
+        display: none;
+    }
+
+    /* Qty cell: grows */
+    .cart-table tbody td[data-label="Qty"] {
+        display: block;
+        flex: 1 1 auto;
+        padding: 0;
+    }
+
+    /* Price cell */
+    .cart-table tbody td[data-label="Price"] {
+        display: block;
+        flex: 0 0 auto;
+        padding: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--crimson);
+        text-align: right;
+    }
+
+    /* Remove button cell */
+    .cart-table tbody td:last-child {
+        display: block;
+        flex: 0 0 auto;
+        padding: 0;
+    }
+
+    /* Footer total row */
+    .cart-table tfoot tr {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border-top: 2px solid var(--dark);
+    }
+
+    .cart-table tfoot td {
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    .cart-table tfoot td:first-child,
+    .cart-table tfoot td:nth-child(2) {
+        display: none;
+    }
+
+    .cart-table tfoot td:nth-child(3) {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .cart-total-price {
+        font-size: 18px;
+    }
+
+    /* Payment card responsive */
+    .pay-card {
+        padding: 16px 14px;
+    }
+
+    .pay-method {
+        padding: 11px 12px;
+        gap: 10px;
     }
 }
 
@@ -1358,4 +1551,120 @@ footer a:hover {
     .qr-box {
         width: 120px;
     }
+}
+
+/* ─── MOBILE NAV OVERLAY ─── */
+.mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.mobile-nav-overlay.show {
+    opacity: 1;
+}
+
+/* ─── MOBILE NAV DRAWER ─── */
+.mobile-nav-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(300px, 80vw);
+    background: var(--dark2);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 1px solid #2e2e2e;
+    box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+}
+
+.mobile-nav-drawer.open {
+    transform: translateX(0);
+}
+
+.mobile-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid #2e2e2e;
+    min-height: 64px;
+}
+
+.mobile-nav-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #3a3a3a;
+    background: rgba(255,255,255,0.05);
+    color: #aaa;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-nav-close:hover {
+    background: rgba(255,255,255,0.12);
+    color: white;
+}
+
+.mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 10px;
+    flex: 1;
+    gap: 4px;
+}
+
+.mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    color: #bbb;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    letter-spacing: 0.2px;
+    transition: background 0.18s, color 0.18s;
+    border: 1px solid transparent;
+}
+
+.mobile-nav-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: white;
+}
+
+.mobile-nav-item.active {
+    background: var(--crimson);
+    color: white;
+    border-color: rgba(255,255,255,0.1);
+}
+
+.mobile-nav-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.mobile-nav-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #2e2e2e;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 1px;
+    text-align: center;
 }

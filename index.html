@@ -106,6 +106,31 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════ QR PAYMENT MODAL ═══════════════════════════ -->
+    <div class="sheet-backdrop" id="qrModalBackdrop" onclick="closeQrModal()"></div>
+    <div class="sheet" id="qrModal" style="text-align: center; padding: 20px;">
+        <div class="sheet-head" style="justify-content: center; position: relative; margin-bottom: 5px;">
+            <div class="sheet-title">Scan to Pay</div>
+            <button class="sheet-close" onclick="closeQrModal()"
+                style="position: absolute; right: 0; top: 0;">✕</button>
+        </div>
+        <div style="margin: 20px 0; display: flex; justify-content: center;">
+            <div
+                style="padding: 10px; background: white; border-radius: 12px; border: 1.5px solid var(--border); box-shadow: var(--card-shadow); display: inline-block;">
+                <img id="qrImage" src="" alt="QR Code" style="width: 220px; height: 220px; display: block;">
+            </div>
+        </div>
+        <p style="font-size: 13px; color: var(--mid); margin-bottom: 24px;">Scan the QR code with your banking app. Once
+            scanned, please tap 'Confirm' below.</p>
+        <button class="add-to-cart" onclick="completeQrPayment()"
+            style="width: 100%; margin-bottom: 16px; padding: 12px; background: #15803d;">Scanned successfully</button>
+        <button class="cart-remove" onclick="closeQrModal()"
+            style="width: 100%; margin-bottom: 16px; padding: 8px;">Close</button>
+        <a id="qrLink" href="#" target="_blank"
+            style="font-size: 13px; color: var(--crimson); text-decoration: underline; font-weight: 600; display: block;">Or
+            proceed to the VNPAY checkout page.</a>
+    </div>
+
     <!-- ═══════════════════════════════════ NAV ═══════════════════════════════════ -->
     <nav>
         <div class="brand">
@@ -115,13 +140,57 @@
                 <span class="brand-sub">RAMEN</span>
             </div>
         </div>
-        <div class="nav-links">
-            <a href="#" class="active" onclick="showPage('home', this)">Home</a>
-            <a href="#" onclick="showPage('menu', this)">Menu</a>
-            <a href="#" onclick="showPage('order', this)">Order</a>
-            <a href="#" onclick="showPage('kitchen', this)">Kitchen</a>
+        <!-- Desktop nav links -->
+        <div class="nav-links" id="navLinks">
+            <a href="#" class="active" onclick="showPage('home', this); closeMobileNav()">Home</a>
+            <a href="#" onclick="showPage('menu', this); closeMobileNav()">Menu</a>
+            <a href="#" onclick="showPage('order', this); closeMobileNav()">Order</a>
+            <a href="#" onclick="showPage('kitchen', this); closeMobileNav()">Kitchen</a>
         </div>
+        <!-- Hamburger button (mobile only) -->
+        <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </nav>
+
+    <!-- Mobile Nav Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <div class="mobile-nav-header">
+            <div class="brand" style="color:#fff;">
+                <div class="brand-icon">🍜</div>
+                <div>
+                    <div>01-Wantantan</div>
+                    <span class="brand-sub">RAMEN</span>
+                </div>
+            </div>
+            <button class="mobile-nav-close" onclick="closeMobileNav()">✕</button>
+        </div>
+        <nav class="mobile-nav-links">
+            <a href="#" class="mobile-nav-item active" id="mobileNav-home"
+                onclick="showPage('home', document.querySelector('.nav-links a:nth-child(1)')); closeMobileNav()">
+                <span class="mobile-nav-icon">🏠</span> Home
+            </a>
+            <a href="#" class="mobile-nav-item" id="mobileNav-menu"
+                onclick="showPage('menu', document.querySelector('.nav-links a:nth-child(2)')); closeMobileNav()">
+                <span class="mobile-nav-icon">📋</span> Menu
+            </a>
+            <a href="#" class="mobile-nav-item" id="mobileNav-order"
+                onclick="showPage('order', document.querySelector('.nav-links a:nth-child(3)')); closeMobileNav()">
+                <span class="mobile-nav-icon">🛒</span> Order
+            </a>
+            <a href="#" class="mobile-nav-item" id="mobileNav-kitchen"
+                onclick="showPage('kitchen', document.querySelector('.nav-links a:nth-child(4)')); closeMobileNav()">
+                <span class="mobile-nav-icon">🍳</span> Kitchen
+            </a>
+        </nav>
+        <div class="mobile-nav-footer">
+            <span>01-Wantantan Ramen &copy; 2026</span>
+        </div>
+    </div>
 
     <!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
     <div class="page active" id="page-home">
@@ -134,10 +203,6 @@
                     Authentic Ramen,<br>Every Bowl
                 </h1>
                 <div class="hero-row">
-                    <div class="qr-note">
-                        <div class="qr-box"><img src="./Images/qr-code.png"></div>
-                        <span>Scan the QR code at your table to start ordering.</span>
-                    </div>
                     <button class="hero-btn"
                         onclick="showPage('menu', document.querySelector('.nav-links a:nth-child(2)'))">
                         View Menu →
@@ -575,7 +640,72 @@
 
     <!-- ════════════════════════════════ SCRIPT ══════════════════════════════════ -->
     <script src="app.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const payment = urlParams.get('payment');
+        const orderId = urlParams.get('orderId');
 
+        if (payment === 'success') {
+            showToast(`✅ Payment success! Order: ${orderId}`);
+        }
+
+        if (payment === 'fail') {
+            showToast('❌ Payment failed!', true);
+        }
+
+        if (payment === 'invalid') {
+            showToast('⚠ Payment verification failed!', true);
+        }
+
+        /* ── Mobile nav ── */
+        function toggleMobileNav() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            const overlay = document.getElementById('mobileNavOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            const isOpen = drawer.classList.contains('open');
+            if (isOpen) {
+                closeMobileNav();
+            } else {
+                drawer.classList.add('open');
+                overlay.style.display = 'block';
+                requestAnimationFrame(() => overlay.classList.add('show'));
+                btn.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeMobileNav() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            const overlay = document.getElementById('mobileNavOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            drawer.classList.remove('open');
+            overlay.classList.remove('show');
+            btn.classList.remove('open');
+            document.body.style.overflow = '';
+            setTimeout(() => { overlay.style.display = 'none'; }, 280);
+        }
+
+        /* Sync active state on mobile nav items when showPage is called */
+        const _origShowPage = typeof showPage === 'function' ? showPage : null;
+        function syncMobileNav(pageId) {
+            document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('mobileNav-' + pageId);
+            if (target) target.classList.add('active');
+        }
+        // Wrap showPage to also sync mobile nav highlight
+        if (typeof showPage === 'function') {
+            const _orig = showPage;
+            window.showPage = function (pageId, el) {
+                _orig(pageId, el);
+                syncMobileNav(pageId);
+            };
+        }
+
+        // Close drawer on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMobileNav();
+        });
+    </script>
 </body>
 
 </html>
